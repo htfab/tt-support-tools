@@ -18,3 +18,13 @@
 | 5 | {ui[5]}      | {uo[5]}      | {uio[5]}           |
 | 6 | {ui[6]}      | {uo[6]}      | {uio[6]}           |
 | 7 | {ui[7]}      | {uo[7]}      | {uio[7]}           |
+
+### Analog pins
+
+| Int# | Ext# | Description                 |
+| 0    | ?    | {pinout.ua[0]}              |
+| 1    | ?    | {pinout.ua[1]}              |
+| 2    | ?    | {pinout.ua[2]}              |
+| 3    | ?    | {pinout.ua[3]}              |
+| 4    | ?    | {pinout.ua[4]}              |
+| 5    | ?    | {pinout.ua[5]}              |

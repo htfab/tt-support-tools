@@ -29,6 +29,16 @@ weight: {weight}
 | 6 | {pinout.ui[6]} | {pinout.uo[6]} | {pinout.uio[6]} |
 | 7 | {pinout.ui[7]} | {pinout.uo[7]} | {pinout.uio[7]} |
 
+### Analog pins
+
+| Int# | Ext#             | Description                 |
+| 0    | {analog_pins[0]} | {pinout.ua[0]}              |
+| 1    | {analog_pins[1]} | {pinout.ua[1]}              |
+| 2    | {analog_pins[2]} | {pinout.ua[2]}              |
+| 3    | {analog_pins[3]} | {pinout.ua[3]}              |
+| 4    | {analog_pins[4]} | {pinout.ua[4]}              |
+| 5    | {analog_pins[5]} | {pinout.ua[5]}              |
+
 ### Chip location
 
 {{{{< shuttle-map "{shuttle_id}" "{mux_address}" >}}}}

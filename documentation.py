@@ -83,6 +83,7 @@ class Docs:
                     yaml_data["user_docs"], f"projects/{project.get_macro_name()}/docs"
                 )
                 yaml_data["mux_address"] = project.mux_address
+                yaml_data["analog_pins"] = (project.analog_pins or ()) + ("?",) * 6
 
                 logging.info(f"building datasheet for {project}")
 
@@ -183,6 +184,7 @@ class Docs:
                     os.path.join(project.src_dir, "docs"),
                     project_image_dir,
                 )
+                yaml_data["analog_pins"] = (project.analog_pins or ()) + ("?",) * 6
 
                 doc = doc_template.format(**yaml_data)
                 with open(os.path.join(project_dir, "_index.md"), "w") as pfh:
