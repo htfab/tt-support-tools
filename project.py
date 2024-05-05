@@ -528,9 +528,27 @@ class Project:
     # use pandoc to create a single page PDF preview
     def create_pdf(self):
         template_args = copy.deepcopy(self.info.__dict__)
-        template_args["ui"] = self.info.pinout.ui
-        template_args["uo"] = self.info.pinout.uo
-        template_args["uio"] = self.info.pinout.uio
+        template_args.update(
+            {
+                "pins": [
+                    {
+                        "ui": self.info.pinout.ui[i],
+                        "uo": self.info.pinout.uo[i],
+                        "uio": self.info.pinout.uio[i],
+                    }
+                    for i in range(8)
+                ],
+                "analog_pins": [
+                    {
+                        "ua_index": str(i),
+                        "analog_index": "?",
+                        "desc": self.info.pinout.ua[i],
+                    }
+                    for i, desc in enumerate(self.info.pinout.ua)
+                ],
+                "is_analog": bool(self.info.pinout.ua),
+            }
+        )
 
         logging.info("Creating PDF")
         script_dir = os.path.dirname(os.path.realpath(__file__))
