@@ -20,6 +20,7 @@ class PinoutSection:
             if pin is None:
                 break
             self.ua.append(pin)
+        self.ua_ext = self.ua + ["unused"] * (8 - len(self.ua))
 
     def _pins(self, yaml_data: Dict[str, Any], name: str, count: int) -> List[str]:
         result: List[str] = []

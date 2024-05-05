@@ -32,12 +32,12 @@ weight: {weight}
 ### Analog pins
 
 | Int# | Ext#             | Description                 |
-| 0    | {analog_pins[0]} | {pinout.ua[0]}              |
-| 1    | {analog_pins[1]} | {pinout.ua[1]}              |
-| 2    | {analog_pins[2]} | {pinout.ua[2]}              |
-| 3    | {analog_pins[3]} | {pinout.ua[3]}              |
-| 4    | {analog_pins[4]} | {pinout.ua[4]}              |
-| 5    | {analog_pins[5]} | {pinout.ua[5]}              |
+| 0    | {analog_pins[0]} | {pinout.ua_ext[0]}          |
+| 1    | {analog_pins[1]} | {pinout.ua_ext[1]}          |
+| 2    | {analog_pins[2]} | {pinout.ua_ext[2]}          |
+| 3    | {analog_pins[3]} | {pinout.ua_ext[3]}          |
+| 4    | {analog_pins[4]} | {pinout.ua_ext[4]}          |
+| 5    | {analog_pins[5]} | {pinout.ua_ext[5]}          |
 
 ### Chip location
 
