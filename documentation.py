@@ -186,6 +186,8 @@ class Docs:
                 )
                 yaml_data["analog_pins"] = (project.analog_pins or ()) + ("?",) * 6
 
+                logging.info("doc_template: " + doc_template)
+                logging.info("yaml_data: " + str(yaml_data))
                 doc = doc_template.format(**yaml_data)
                 with open(os.path.join(project_dir, "_index.md"), "w") as pfh:
                     pfh.write(doc)
