@@ -22,6 +22,7 @@
 ### Analog pins
 
 | Int# | Ext# | Description                 |
+| ---- | ---- | --------------------------- |
 | 0    | ?    | {pinout.ua_ext[0]}          |
 | 1    | ?    | {pinout.ua_ext[1]}          |
 | 2    | ?    | {pinout.ua_ext[2]}          |

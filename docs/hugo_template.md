@@ -32,6 +32,7 @@ weight: {weight}
 ### Analog pins
 
 | Int# | Ext#             | Description                 |
+| ---- | ---------------- | --------------------------- |
 | 0    | {analog_pins[0]} | {pinout.ua_ext[0]}          |
 | 1    | {analog_pins[1]} | {pinout.ua_ext[1]}          |
 | 2    | {analog_pins[2]} | {pinout.ua_ext[2]}          |
