@@ -10,6 +10,7 @@ import subprocess
 import typing
 
 import cairosvg  # type: ignore
+import chevron
 import gdstk  # type: ignore
 import yaml
 from git.repo import Repo
@@ -535,7 +536,7 @@ class Project:
         script_dir = os.path.dirname(os.path.realpath(__file__))
         with open(os.path.join(script_dir, "docs/project_header.md")) as fh:
             doc_header = fh.read()
-        with open(os.path.join(script_dir, "docs/project_preview.md")) as fh:
+        with open(os.path.join(script_dir, "docs/project_preview.md.mustache")) as fh:
             doc_template = fh.read()
         info_md = os.path.join(self.local_dir, "docs/info.md")
         with open(info_md) as fh:
@@ -546,7 +547,7 @@ class Project:
 
             # now build the doc & print it
             try:
-                doc = doc_template.format(**template_args)
+                doc = chevron.render(doc_template, template_args)
                 fh.write(doc)
                 fh.write("\n\\pagebreak\n")
             except IndexError:
