@@ -19,7 +19,7 @@
 | 6 | {ui[6]}      | {uo[6]}      | {uio[6]}           |
 | 7 | {ui[7]}      | {uo[7]}      | {uio[7]}           |
 
-### Analog pins
+## Analog pins
 
 | Int# | Ext# | Description                 |
 | ---- | ---- | --------------------------- |
