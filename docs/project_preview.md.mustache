@@ -8,10 +8,10 @@
 
 ## Pinout
 
-| # | Input        | Output       | Bidirectional      |
-|---|--------------|--------------|--------------------|
+| #             | Input    | Output   | Bidirectional  |
+|---------------|----------|----------|----------------|
 {{#pins}}
-| 0 | {{&ui}}      | {{&uo}}      | {{&uio}}           |
+| {{pin_index}} | {{&ui}}  | {{&uo}}  | {{&uio}}       |
 {{/pins}}
 
 {{#is_analog}}

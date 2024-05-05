@@ -532,6 +532,7 @@ class Project:
             {
                 "pins": [
                     {
+                        "pin_index": str(i),
                         "ui": self.info.pinout.ui[i],
                         "uo": self.info.pinout.uo[i],
                         "uio": self.info.pinout.uio[i],
