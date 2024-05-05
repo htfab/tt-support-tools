@@ -24,6 +24,10 @@ def limit_markdown_headings(source: str, min_level: int) -> str:
     return markdown(source)
 
 
+def unescape_braces(text: str):
+    return text.replace("%7B", "{").replace("%7D", "}")
+
+
 class ImagePathRewriterRenderer(MarkdownRenderer):
     def __init__(self, prefix: str):
         super().__init__()
@@ -31,14 +35,15 @@ class ImagePathRewriterRenderer(MarkdownRenderer):
 
     def image(self, token, state):
         url = token["attrs"]["url"]
-        if "{{" in url:
-            pass
+        if "%7B" in url:
+            url = unescape_braces(url)
         elif "://" not in url and not url.startswith("/"):
-            token["attrs"]["url"] = os.path.join(self.prefix, url)
+            url = os.path.join(self.prefix, url)
         elif ".." in url:
-            token["attrs"]["url"] = ""
+            url = ""
         elif url.startswith("/"):
-            token["attrs"]["url"] = os.path.join(self.prefix, "../" + url[1:])
+            url = os.path.join(self.prefix, "../" + url[1:])
+        token["attrs"]["url"] = url
         return super().image(token, state)
 
 
@@ -55,10 +60,10 @@ class WebsiteImagePathRewriterRenderer(MarkdownRenderer):
 
     def image(self, token, state):
         url = token["attrs"]["url"]
-        if "{{" in url:
-            pass
+        if "%7B" in url:
+            url = unescape_braces(url)
         elif ".." in url:
-            token["attrs"]["url"] = ""
+            url = ""
         elif "://" not in url and not url.startswith("/"):
             filename = os.path.basename(url)
             if url.startswith("/"):
@@ -67,7 +72,8 @@ class WebsiteImagePathRewriterRenderer(MarkdownRenderer):
                 os.path.join(self.source_dir, url),
                 os.path.join(self.target_dir, filename),
             )
-            token["attrs"]["url"] = f"images/{filename}"
+            url = f"images/{filename}"
+        token["attrs"]["url"] = url
         return super().image(token, state)
 
 
