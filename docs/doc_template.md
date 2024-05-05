@@ -2,10 +2,10 @@
 
 * Author: {author}
 * Description: {description}
-* [GitHub repository](__git_url__)
+* [GitHub repository]({git_url})
 * {project_type} project
 * Mux address: {mux_address}
-* [Extra docs](__doc_link__)
+* [Extra docs]({doc_link})
 * Clock: {clock_hz} Hz
 
 {user_docs}
