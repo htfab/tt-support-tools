@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from typing import List, Optional
 
+import chevron
 import frontmatter  # type: ignore
 import git  # type: ignore
 
@@ -62,7 +63,7 @@ class Docs:
     def write_datasheet(self, markdown_file: str, pdf_file: Optional[str] = None):
         doc_header = self.load_doc_template("doc_header.md")
         doc_chip_map = self.load_doc_template("../../docs/chip_map.md")
-        doc_template = self.load_doc_template("doc_template.md")
+        doc_template = self.load_doc_template("doc_template.md.mustache")
         doc_pinout = self.load_doc_template("PINOUT.md")
         doc_info = self.load_doc_template("../../tt-multiplexer/docs/INFO.md")
         doc_credits = self.load_doc_template("CREDITS.md")
@@ -79,13 +80,33 @@ class Docs:
 
             for project in self.projects:
                 yaml_data = project.get_project_docs_dict()
-                yaml_data["user_docs"] = rewrite_image_paths(
-                    yaml_data["user_docs"], f"projects/{project.get_macro_name()}/docs"
+                yaml_data.update(
+                    {
+                        "user_docs": rewrite_image_paths(
+                            yaml_data["user_docs"],
+                            f"projects/{project.get_macro_name()}/docs",
+                        ),
+                        "mux_address": project.mux_address,
+                        "pins": [
+                            {
+                                "pin_index": str(i),
+                                "ui": project.info.pinout.ui[i],
+                                "uo": project.info.pinout.uo[i],
+                                "uio": project.info.pinout.uio[i],
+                            }
+                            for i in range(8)
+                        ],
+                        "analog_pins": [
+                            {
+                                "ua_index": str(i),
+                                "analog_index": str(project.analog_pins[i]),
+                                "desc": desc,
+                            }
+                            for i, desc in enumerate(project.info.pinout.ua)
+                        ],
+                        "is_analog": bool(project.info.pinout.ua),
+                    }
                 )
-                yaml_data["mux_address"] = project.mux_address
-                yaml_data["analog_pins"] = (project.analog_pins or ()) + (
-                    "unavailable",
-                ) * 6
 
                 logging.info(f"building datasheet for {project}")
 
@@ -107,11 +128,7 @@ class Docs:
                 # now build the doc & print it
                 try:
                     logging.info("doc_template: " + doc_template)
-                    doc = (
-                        doc_template.replace("__git_url__", "{git_url}")
-                        .replace("__doc_link__", "{doc_link}")
-                        .format(**yaml_data)
-                    )
+                    doc = chevron.render(doc_template, yaml_data)
                     fh.write(doc)
                     fh.write("\n\\clearpage\n")
                 except IndexError:

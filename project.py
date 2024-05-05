@@ -543,7 +543,7 @@ class Project:
                     {
                         "ua_index": str(i),
                         "analog_index": "?",
-                        "desc": self.info.pinout.ua[i],
+                        "desc": desc,
                     }
                     for i, desc in enumerate(self.info.pinout.ua)
                 ],
