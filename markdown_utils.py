@@ -31,7 +31,9 @@ class ImagePathRewriterRenderer(MarkdownRenderer):
 
     def image(self, token, state):
         url = token["attrs"]["url"]
-        if "://" not in url and not url.startswith("/"):
+        if "{{" in url:
+            pass
+        elif "://" not in url and not url.startswith("/"):
             token["attrs"]["url"] = os.path.join(self.prefix, url)
         elif ".." in url:
             token["attrs"]["url"] = ""
@@ -53,7 +55,9 @@ class WebsiteImagePathRewriterRenderer(MarkdownRenderer):
 
     def image(self, token, state):
         url = token["attrs"]["url"]
-        if ".." in url:
+        if "{{" in url:
+            pass
+        elif ".." in url:
             token["attrs"]["url"] = ""
         elif "://" not in url and not url.startswith("/"):
             filename = os.path.basename(url)
