@@ -36,7 +36,7 @@ class ImagePathRewriterRenderer(MarkdownRenderer):
     def image(self, token, state):
         url = token["attrs"]["url"]
         if "%7B" in url:
-            url = unescape_braces(url)
+            pass
         elif "://" not in url and not url.startswith("/"):
             url = os.path.join(self.prefix, url)
         elif ".." in url:
@@ -49,7 +49,7 @@ class ImagePathRewriterRenderer(MarkdownRenderer):
 
 def rewrite_image_paths(source: str, prefix: str) -> str:
     markdown = mistune.create_markdown(renderer=ImagePathRewriterRenderer(prefix))
-    return markdown(source)
+    return unescape_braces(markdown(source))
 
 
 class WebsiteImagePathRewriterRenderer(MarkdownRenderer):
@@ -61,7 +61,7 @@ class WebsiteImagePathRewriterRenderer(MarkdownRenderer):
     def image(self, token, state):
         url = token["attrs"]["url"]
         if "%7B" in url:
-            url = unescape_braces(url)
+            pass
         elif ".." in url:
             url = ""
         elif "://" not in url and not url.startswith("/"):
@@ -83,4 +83,4 @@ def rewrite_image_paths_for_website(
     markdown = mistune.create_markdown(
         renderer=WebsiteImagePathRewriterRenderer(source_dir, target_dir)
     )
-    return markdown(source)
+    return unescape_braces(markdown(source))
