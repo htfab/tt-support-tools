@@ -1,4 +1,4 @@
-from typing import List, Literal, TypedDict
+from typing import List, Literal, NotRequired, TypedDict
 
 
 class ShuttleIndexProject(TypedDict):
@@ -9,7 +9,7 @@ class ShuttleIndexProject(TypedDict):
     tiles: str
     repo: str
     commit: str
-    analog_pins: tuple[int, ...] | None
+    analog_pins: NotRequired[tuple[int, ...]]
 
 
 class ShuttleIndexLayout(TypedDict):
