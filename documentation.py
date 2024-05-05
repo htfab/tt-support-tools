@@ -106,6 +106,7 @@ class Docs:
 
                 # now build the doc & print it
                 try:
+                    logging.info("doc_template: " + doc_template)
                     doc = (
                         doc_template.replace("__git_url__", "{git_url}")
                         .replace("__doc_link__", "{doc_link}")
