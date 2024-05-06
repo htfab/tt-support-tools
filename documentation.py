@@ -156,7 +156,9 @@ class Docs:
         os.makedirs(hugo_root)
         os.makedirs(hugo_images)
 
-        with open(os.path.join(self.script_dir, "docs", "hugo_template.md")) as fh:
+        with open(
+            os.path.join(self.script_dir, "docs", "hugo_template.md.mustache")
+        ) as fh:
             doc_template = fh.read()
 
         with open(
@@ -194,22 +196,42 @@ class Docs:
                 os.makedirs(project_dir)
                 os.makedirs(project_image_dir)
                 yaml_data = project.get_project_docs_dict()
-                yaml_data["mux_address"] = project.mux_address
-                yaml_data["index"] = project.index
-                yaml_data["weight"] = project.index + 1
-                yaml_data["git_action"] = project.get_workflow_url_when_submitted()
-                yaml_data["shuttle_id"] = self.config["id"]
-                yaml_data["user_docs"] = rewrite_image_paths_for_website(
-                    yaml_data["user_docs"],
-                    os.path.join(project.src_dir, "docs"),
-                    project_image_dir,
+                yaml_data.update(
+                    {
+                        "mux_address": project.mux_address,
+                        "index": project.index,
+                        "weight": project.index,
+                        "git_action": project.get_workflow_url_when_submitted(),
+                        "shuttle_id": self.config["id"],
+                        "user_docs": rewrite_image_paths_for_website(
+                            yaml_data["user_docs"],
+                            os.path.join(project.src_dir, "docs"),
+                            project_image_dir,
+                        ),
+                        "pins": [
+                            {
+                                "pin_index": str(i),
+                                "ui": project.info.pinout.ui[i],
+                                "uo": project.info.pinout.uo[i],
+                                "uio": project.info.pinout.uio[i],
+                            }
+                            for i in range(8)
+                        ],
+                        "analog_pins": [
+                            {
+                                "ua_index": str(i),
+                                "analog_index": str(project.analog_pins[i]),
+                                "desc": desc,
+                            }
+                            for i, desc in enumerate(project.info.pinout.ua)
+                        ],
+                        "is_analog": bool(project.info.pinout.ua),
+                        "hugo_tag": lambda text, render: "{{<" + render(text) + ">}}",
+                    }
                 )
-                yaml_data["analog_pins"] = (project.analog_pins or ()) + (
-                    "unavailable",
-                ) * 6
 
                 logging.info("doc_template: " + doc_template)
                 logging.info("yaml_data: " + str(yaml_data))
-                doc = doc_template.format(**yaml_data)
+                doc = chevron.render(doc_template, yaml_data)
                 with open(os.path.join(project_dir, "_index.md"), "w") as pfh:
                     pfh.write(doc)

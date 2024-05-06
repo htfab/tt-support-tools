@@ -1,16 +1,22 @@
-## {{title}} [{{mux_address}}]
+---
+hidden: true
+title: "{{mux_address}} {{title}}"
+weight: {{weight}}
+---
+
+## {{mux_address}} : {{title}}
 
 * Author: {{author}}
 * Description: {{&description}}
 * [GitHub repository]({{git_url}})
+* [GDS submitted]({{git_action}})
 * {{project_type}} project
-* Mux address: {{mux_address}}
 * [Extra docs]({{doc_link}})
 * Clock: {{clock_hz}} Hz
 
 {{&user_docs}}
 
-### Pinout
+### IO 
 
 | #             | Input    | Output   | Bidirectional   |
 | ------------- | -------- | -------- | --------------- |
@@ -27,3 +33,7 @@
 | {{ua_index}} | {{analog_index}} | {{&desc}}           |
 {{/analog_pins}}
 {{/is_analog}}
+
+### Chip location
+
+{{#hugo_tag}} shuttle-map "{{shuttle_id}}" "{{mux_address}}" {{/hugo_tag}}
