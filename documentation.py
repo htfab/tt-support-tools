@@ -88,6 +88,7 @@ class Docs:
             self.projects.sort(key=lambda x: x.mux_address)
 
             for project in self.projects:
+                assert project.analog_pins is not None
                 yaml_data = project.get_project_docs_dict()
                 yaml_data.update(
                     {
@@ -206,6 +207,7 @@ class Docs:
                 project_image_dir = os.path.join(project_dir, "images")
                 os.makedirs(project_dir)
                 os.makedirs(project_image_dir)
+                assert project.analog_pins is not None
                 yaml_data = project.get_project_docs_dict()
                 yaml_data.update(
                     {
