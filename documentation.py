@@ -162,7 +162,7 @@ class Docs:
             doc_template = fh.read()
 
         with open(
-            os.path.join(self.script_dir, "docs", "hugo_index_template.md")
+            os.path.join(self.script_dir, "docs", "hugo_index_template.md.mustache")
         ) as fh:
             index_template = fh.read()
 
@@ -175,6 +175,7 @@ class Docs:
 
         # index page
         logging.info("building pages")
+        hugo_tag = {"hugo": lambda text, render: "{{" + render(text) + "}}"}
         shuttle_info = {
             "shuttle_name": self.config["name"],
             "shuttle_id": self.config["id"],
@@ -182,7 +183,8 @@ class Docs:
             "end_date": self.config["end_date"],
         }
         with open(os.path.join(hugo_root, "_index.md"), "w") as fh:
-            fh.write(index_template.format(**shuttle_info))
+            shuttle_info.update(hugo_tag)
+            fh.write(chevron.render(index_template, shuttle_info))
             fh.write("# All projects\n")
             fh.write("| Index | Title | Author |\n")
             fh.write("| ----- | ----- | -------|\n")
@@ -226,12 +228,12 @@ class Docs:
                             for i, desc in enumerate(project.info.pinout.ua)
                         ],
                         "is_analog": bool(project.info.pinout.ua),
-                        "hugo_tag": lambda text, render: "{{<" + render(text) + ">}}",
                     }
                 )
 
                 logging.info("doc_template: " + doc_template)
                 logging.info("yaml_data: " + str(yaml_data))
+                yaml_data.update(hugo_tag)
                 doc = chevron.render(doc_template, yaml_data)
                 with open(os.path.join(project_dir, "_index.md"), "w") as pfh:
                     pfh.write(doc)
