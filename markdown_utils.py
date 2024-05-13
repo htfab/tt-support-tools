@@ -1,3 +1,4 @@
+import math
 import os
 import shutil
 from typing import Any, Dict
@@ -9,18 +10,18 @@ from mistune.renderers.markdown import MarkdownRenderer
 class HeadingsRenderer(MarkdownRenderer):
     def __init__(self, min_level: int):
         super().__init__()
-        self.min_level = min_level
-        self.initial_level = float("inf")
+        self.min_level_allowed = min_level
+        self.min_level_found = math.inf
 
     def heading(self, token: Dict[str, Any], state: Any):
-        if self.initial_level == float("inf"):
-            self.initial_level = token["attrs"]["level"]
-        token["attrs"]["level"] += self.min_level - max(1, self.initial_level)
+        self.min_level_found = min(self.min_level_found, token["attrs"]["level"])
+        token["attrs"]["level"] += self.min_level_allowed - self.min_level_found
         return super().heading(token, state)
 
 
 def limit_markdown_headings(source: str, min_level: int) -> str:
     markdown = mistune.create_markdown(renderer=HeadingsRenderer(min_level))
+    markdown(source)  # first pass, populate min_level_found
     return markdown(source)
 
 
