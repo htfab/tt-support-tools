@@ -6,6 +6,7 @@ import sys
 from project import Project
 
 if __name__ == "__main__":
+    print("Hello world!", sys.argv)
     parser = argparse.ArgumentParser(description="TT setup")
     parser.add_argument("--project-dir", help="location of the project", default=".")
     parser.add_argument(
