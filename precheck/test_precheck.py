@@ -126,7 +126,7 @@ def generate_analog_example(
 
                 # VPWR
                 foreach vpwr_box {{ {vpwr_boxes} }} {{
-                    box $vpwr_box
+                    box {{$vpwr_box}}
                     paint {vpwr_layer}
                     label VPWR FreeSans {vpwr_layer}
                     port VPWR make n
@@ -137,7 +137,7 @@ def generate_analog_example(
 
                 # VGND
                 foreach vgnd_box {{ {vgnd_boxes} }} {{
-                    box $vgnd_box
+                    box {{$vgnd_box}}
                     paint {vgnd_layer}
                     label VGND FreeSans {vgnd_layer}
                     port VGND make n
