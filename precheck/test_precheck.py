@@ -227,6 +227,26 @@ def gds_lef_analog_overlapping_vgnd(tmp_path_factory: pytest.TempPathFactory):
     return str(gds_file), str(lef_file)
 
 
+@pytest.fixture(scope="session")
+def gds_lef_analog_compound_vgnd(tmp_path_factory: pytest.TempPathFactory):
+    """Creates a GDS and LEF using the 1x2 analog template, with VGND consisting of two rectangles."""
+    tcl_file = tmp_path_factory.mktemp("tcl") / "TEST_analog_example.tcl"
+    gds_file = tmp_path_factory.mktemp("gds") / "TEST_analog_example.gds"
+    lef_file = tmp_path_factory.mktemp("lef") / "TEST_analog_example.lef"
+
+    generate_analog_example(
+        str(tcl_file),
+        str(gds_file),
+        str(lef_file),
+        "TEST_analog_compound_vgnd",
+        "met4",
+        "{100 500 250 22076}",
+        "met4",
+        "{4900 500 5050 12076} {4900 12000 5050 22076}",
+    )
+    return str(gds_file), str(lef_file)
+
+
 def test_magic_drc_pass(gds_valid: str):
     precheck.magic_drc(gds_valid, "TEST_valid")
 
@@ -326,3 +346,13 @@ def test_pin_analog_overlapping_vgnd(gds_lef_analog_overlapping_vgnd: tuple[str,
             "../def/analog/tt_block_1x2_pg_ana.def",
             "TEST_analog_overlapping_vgnd",
         )
+
+
+def test_pin_analog_compound_vgnd(gds_lef_analog_compound_vgnd: tuple[str, str]):
+    gds_file, lef_file = gds_lef_analog_compound_vgnd
+    precheck.pin_check(
+        gds_file,
+        lef_file,
+        "../def/analog/tt_block_1x2_pg_ana.def",
+        "TEST_analog_compound_vgnd",
+    )
