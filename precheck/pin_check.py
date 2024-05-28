@@ -245,9 +245,11 @@ def pin_check(gds: str, lef: str, template_def: str, toplevel: str):
                         lef_errors += 1
                     current_pin = None
 
-    for current_pin in lef_ports:
+    lef_ports_orig = lef_ports
+    lef_ports = {}
+    for current_pin, ports_orig in lef_ports_orig.items():
         ports_by_layers = {}
-        for layer, lx, by, rx, ty in lef_ports[current_pin]:
+        for layer, lx, by, rx, ty in ports_orig:
             if layer not in ports_by_layers:
                 ports_by_layers[layer] = []
             ports_by_layers[layer].append((lx, by, rx, ty))
@@ -364,7 +366,7 @@ def pin_check(gds: str, lef: str, template_def: str, toplevel: str):
     }
 
     gds_errors = 0
-    for current_pin, lef_rects in sorted(lef_ports.items()):
+    for current_pin, lef_rects in sorted(lef_ports_orig.items()):
         for layer, lx, by, rx, ty in lef_rects:
             if layer + ".pin" not in gds_layers:
                 raise PrecheckFailure(
