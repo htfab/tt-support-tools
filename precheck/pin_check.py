@@ -1,9 +1,93 @@
 import logging
 import re
+from collections.abc import Iterable
 from itertools import combinations
+from numbers import Real
 
 import gdstk
 from precheck_failure import PrecheckFailure
+
+
+def canonicalize_rectangles(
+    rects: Iterable[Iterable[Real]],
+) -> Iterable[Iterable[Real]]:
+    # lists all maximal rectangles covered by the union of input rectangles
+
+    sweep_events = {}
+    for lx, by, rx, ty in rects:
+        sweep_events[by] = sweep_events.get(by, {})
+        sweep_events[by][lx] = sweep_events[by].get(lx, 0) + 1
+        sweep_events[by][rx] = sweep_events[by].get(rx, 0) - 1
+        sweep_events[ty] = sweep_events.get(ty, {})
+        sweep_events[ty][lx] = sweep_events[ty].get(lx, 0) - 1
+        sweep_events[ty][rx] = sweep_events[ty].get(rx, 0) + 1
+
+    closed_rects = []
+    open_rects = {}
+    cross_section_events = {}
+    for y, sweep_line_events in sorted(sweep_events.items()):
+        old_multiplicity = 0
+        new_multiplicity = 0
+        is_covered, covered_intervals, covered_start = False, [], None
+        is_removed, removed_intervals, removed_start = False, [], None
+        for x in sorted(set(cross_section_events).union(sweep_line_events)):
+            old_delta = cross_section_events.get(x, 0)
+            new_delta = sweep_line_events.get(x, 0) + old_delta
+            old_multiplicity += old_delta
+            new_multiplicity += new_delta
+            assert old_multiplicity >= 0
+            assert new_multiplicity >= 0
+            was_covered, was_removed = is_covered, is_removed
+            is_covered = new_multiplicity > 0
+            is_removed = old_multiplicity > 0 and new_multiplicity == 0
+            if was_covered and not is_covered:
+                assert covered_start is not None
+                covered_intervals.append((covered_start, x))
+                covered_start = None
+            if was_removed and not is_removed:
+                assert removed_start is not None
+                removed_intervals.append((removed_start, x))
+                removed_start = None
+            if is_covered and not was_covered:
+                assert covered_start is None
+                covered_start = x
+            if is_removed and not was_removed:
+                assert removed_start is None
+                removed_start = x
+
+        for x, m in sorted(sweep_line_events.items()):
+            cross_section_events[x] = cross_section_events.get(x, 0) + m
+            if cross_section_events[x] == 0:
+                del cross_section_events[x]
+
+        for (lx, rx), by in open_rects.items():
+            closed = False
+            for ix, jx in removed_intervals:
+                if ix < rx and lx < jx:
+                    closed = True
+            if closed:
+                closed_rects.append((lx, by, rx, y))
+
+        kept_intervals = [
+            (b, c)
+            for ((a, b), (c, d)) in zip(
+                [(None, None)] + removed_intervals, removed_intervals + [(None, None)]
+            )
+        ]
+        open_rects_new = {}
+        for ix, jx in covered_intervals:
+            open_rects_new[(ix, jx)] = y
+        for (lx, rx), by in open_rects.items():
+            for ix, jx in kept_intervals:
+                if (ix is None or ix < rx) and (jx is None or lx < jx):
+                    clx = lx if ix is None else max(lx, ix)
+                    crx = rx if jx is None else min(rx, jx)
+                    open_rects_new[(clx, crx)] = min(
+                        open_rects_new.get((clx, crx), by), by
+                    )
+        open_rects = open_rects_new
+
+    return sorted(set(closed_rects))
 
 
 def parsefp3(value: str):
@@ -160,6 +244,18 @@ def pin_check(gds: str, lef: str, template_def: str, toplevel: str):
                         logging.error(f"No ports for pin {current_pin} in {lef}")
                         lef_errors += 1
                     current_pin = None
+
+    for current_pin in lef_ports:
+        ports_by_layers = {}
+        for layer, lx, by, rx, ty in lef_ports[current_pin]:
+            if layer not in ports_by_layers:
+                ports_by_layers[layer] = []
+            ports_by_layers[layer].append((lx, by, rx, ty))
+        ports = []
+        for layer, rects in sorted(ports_by_layers.items()):
+            for lx, by, rx, ty in canonicalize_rectangles(rects):
+                ports.append((layer, lx, by, rx, ty))
+        lef_ports[current_pin] = ports
 
     for current_pin in def_pins:
         if current_pin not in lef_ports:
