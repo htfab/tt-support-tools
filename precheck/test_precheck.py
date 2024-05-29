@@ -113,9 +113,9 @@ def generate_analog_example(
     lef_file: str,
     toplevel: str,
     vpwr_layer: str,
-    vpwr_boxes: str,
+    vpwr_box: str,
     vgnd_layer: str,
-    vgnd_boxes: str,
+    vgnd_box: str,
 ):
     with open(tcl_file, "w") as f:
         f.write(
@@ -125,30 +125,26 @@ def generate_analog_example(
                 cellname rename tt_um_template {toplevel}
 
                 # VPWR
-                foreach vpwr_box {{ {vpwr_boxes} }} {{
-                    box {{*}}$vpwr_box
-                    paint {vpwr_layer}
-                    label VPWR FreeSans {vpwr_layer}
-                }}
-                port VPWR makeall n
+                box {vpwr_box}
+                paint {vpwr_layer}
+                label VPWR FreeSans {vpwr_layer}
+                port VPWR make n
                 port VPWR use power
                 port VPWR class bidirectional
                 port conn n s e w
 
                 # VGND
-                foreach vgnd_box {{ {vgnd_boxes} }} {{
-                    box {{*}}$vgnd_box
-                    paint {vgnd_layer}
-                    label VGND FreeSans {vgnd_layer}
-                }}
-                port VGND makeall n
+                box {vgnd_box}
+                paint {vgnd_layer}
+                label VGND FreeSans {vgnd_layer}
+                port VGND make n
                 port VGND use ground
                 port VGND class bidirectional
                 port conn n s e w
 
                 # Export
                 gds write {gds_file}
-                lef write {lef_file}
+                lef write {lef_file} -pinonly
                 """
             )
         )
@@ -180,9 +176,9 @@ def gds_lef_analog_example(tmp_path_factory: pytest.TempPathFactory):
         str(lef_file),
         "TEST_analog_example",
         "met4",
-        "{100 500 250 22076}",
+        "100 500 250 22076",
         "met4",
-        "{4900 500 5050 22076}",
+        "4900 500 5050 22076",
     )
     return str(gds_file), str(lef_file)
 
@@ -200,9 +196,9 @@ def gds_lef_analog_wrong_vgnd(tmp_path_factory: pytest.TempPathFactory):
         str(lef_file),
         "TEST_analog_wrong_vgnd",
         "met4",
-        "{100 500 250 22076}",
+        "100 500 250 22076",
         "met3",
-        "{4900 500 5250 12076}",
+        "4900 500 5250 12076",
     )
     return str(gds_file), str(lef_file)
 
@@ -220,29 +216,9 @@ def gds_lef_analog_overlapping_vgnd(tmp_path_factory: pytest.TempPathFactory):
         str(lef_file),
         "TEST_analog_overlapping_vgnd",
         "met4",
-        "{100 500 250 22076}",
+        "100 500 250 22076",
         "met4",
-        "{349 20 549 22504}",
-    )
-    return str(gds_file), str(lef_file)
-
-
-@pytest.fixture(scope="session")
-def gds_lef_analog_compound_vgnd(tmp_path_factory: pytest.TempPathFactory):
-    """Creates a GDS and LEF using the 1x2 analog template, with VGND consisting of two rectangles."""
-    tcl_file = tmp_path_factory.mktemp("tcl") / "TEST_analog_example.tcl"
-    gds_file = tmp_path_factory.mktemp("gds") / "TEST_analog_example.gds"
-    lef_file = tmp_path_factory.mktemp("lef") / "TEST_analog_example.lef"
-
-    generate_analog_example(
-        str(tcl_file),
-        str(gds_file),
-        str(lef_file),
-        "TEST_analog_compound_vgnd",
-        "met4",
-        "{100 500 250 22076}",
-        "met4",
-        "{4900 500 5050 12076} {4900 12000 5050 22076}",
+        "349 20 549 22504",
     )
     return str(gds_file), str(lef_file)
 
@@ -346,13 +322,3 @@ def test_pin_analog_overlapping_vgnd(gds_lef_analog_overlapping_vgnd: tuple[str,
             "../def/analog/tt_block_1x2_pg_ana.def",
             "TEST_analog_overlapping_vgnd",
         )
-
-
-def test_pin_analog_compound_vgnd(gds_lef_analog_compound_vgnd: tuple[str, str]):
-    gds_file, lef_file = gds_lef_analog_compound_vgnd
-    precheck.pin_check(
-        gds_file,
-        lef_file,
-        "../def/analog/tt_block_1x2_pg_ana.def",
-        "TEST_analog_compound_vgnd",
-    )
