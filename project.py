@@ -119,6 +119,8 @@ class Project:
             if self.is_wokwi():
                 self.top_verilog_filename = self.sources[0]
             else:
+                if any(s.endswith(".vhdl") for s in self.sources):
+                    self.transpile_vhdl()
                 self.check_sources()
                 self.top_verilog_filename = self.find_top_verilog()
         else:
@@ -293,7 +295,7 @@ class Project:
         rgx_mod = re.compile(r"(?:^|[\s])module[\s]{1,}([\w]+)")
         top_verilog: typing.List[str] = []
         top_module = self.info.top_module
-        for src in self.info.source_files:
+        for src in self.sources:
             with open(os.path.join(self.src_dir, src)) as fh:
                 for line in fh.readlines():
                     for match in rgx_mod.finditer(line):
@@ -468,6 +470,26 @@ class Project:
                     logging.info(f"writing src tpl to {outputFname}")
                     outf.write(customizedContents)
                     outf.close()
+
+    def transpile_vhdl(self):
+        # logging.info("transpiling vhdl sources")
+        os.makedirs(os.path.join(self.src_dir, "generated"), exist_ok=True)
+        new_sources = []
+        for s in self.sources:
+            if s.endswith(".vhdl"):
+                # logging.info(f"running ghdl on {s}")
+                t = "generated/" + s.replace(".vhdl", ".v")
+                s_full = os.path.join(self.src_dir, s)
+                t_full = os.path.join(self.src_dir, t)
+                transpile_cmd = f"ghdl synth -Wno-binding --std=08 --out=verilog {s_full} -e > {t_full}"
+                p = subprocess.run(transpile_cmd, shell=True)
+                if p.returncode != 0:
+                    logging.error("transpile failed")
+                    exit(1)
+                new_sources.append(t)
+            else:
+                new_sources.append(s)
+        self.sources = new_sources
 
     def create_user_config(self):
         if self.is_wokwi():
