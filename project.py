@@ -481,6 +481,8 @@ class Project:
                 t = "generated/" + s.replace(".vhdl", ".v")
                 s_full = os.path.join(self.src_dir, s)
                 t_full = os.path.join(self.src_dir, t)
+                if not os.path.exists(os.path.dirname(t_full)):
+                    os.makedirs(os.path.dirname(t_full))
                 transpile_cmd = f"ghdl synth -Wno-binding --std=08 --out=verilog {s_full} -e > {t_full}"
                 p = subprocess.run(transpile_cmd, shell=True)
                 if p.returncode != 0:
