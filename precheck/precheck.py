@@ -131,7 +131,7 @@ def klayout_gf180mcuD_antenna(gds: str):
         gds,
         "antenna",
         "antenna.drc",
-        script_dir=f"{PDK_ROOT}/{PDK_NAME}/libs.tech/klayout/drc/rule_decks",
+        script_dir=f"{PDK_ROOT}/{PDK_NAME}/libs.tech/klayout/tech/drc/rule_decks",
     )
 
 
