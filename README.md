@@ -9,6 +9,12 @@ pip install -r requirements.txt
 pre-commit install
 ```
 
+On macOS, some third-party libraries are required:
+
+```
+brew install libpng qhull cairo
+```
+
 ## Documentation
 
 * checks that basic fields are present in the info.yaml
