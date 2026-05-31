@@ -131,10 +131,13 @@ class ProjectInfo:
         self.analog_pins: int = analog_pins
         self.is_analog: bool = self.analog_pins > 0
 
-        uses_3v3: bool = project_section.get("uses_3v3", False)
-        self.uses_3v3: bool = uses_3v3
-        if uses_3v3 and not self.is_analog:
-            errors.append("Projects with 3v3 power need at least one analog pin")
+        # "uses_3v3" is the legacy name for "uses_vapwr"; still accepted for compat.
+        uses_vapwr: bool = project_section.get(
+            "uses_vapwr", project_section.get("uses_3v3", False)
+        )
+        self.uses_vapwr: bool = uses_vapwr
+        if uses_vapwr and not self.is_analog:
+            errors.append("Projects with VAPWR power need at least one analog pin")
 
         language = project_section.get("language")
         if language is None:

@@ -15,7 +15,7 @@ def valid_yaml_data():
             "description": "Test Description",
             "tiles": "1x1",
             "analog_pins": 0,
-            "uses_3v3": False,
+            "uses_vapwr": False,
             "language": "Verilog",
             "top_module": "tt_um_test_project",
             "source_files": ["test.v"],
@@ -167,12 +167,12 @@ class TestProjectInfoProjectSection:
         ):
             ProjectInfo(valid_yaml_data, tile_sizes)
 
-    def test_uses_3v3_without_analog_pins(self, valid_yaml_data, tile_sizes):
-        valid_yaml_data["project"]["uses_3v3"] = True
+    def test_uses_vapwr_without_analog_pins(self, valid_yaml_data, tile_sizes):
+        valid_yaml_data["project"]["uses_vapwr"] = True
         valid_yaml_data["project"]["analog_pins"] = 0
         with pytest.raises(
             ProjectYamlError,
-            match="Projects with 3v3 power need at least one analog pin",
+            match="Projects with VAPWR power need at least one analog pin",
         ):
             ProjectInfo(valid_yaml_data, tile_sizes)
 
@@ -375,7 +375,7 @@ class TestProjectInfoValidCombinations:
 
     def test_valid_analog_project(self, valid_yaml_data, tile_sizes):
         valid_yaml_data["project"]["analog_pins"] = 2
-        valid_yaml_data["project"]["uses_3v3"] = True
+        valid_yaml_data["project"]["uses_vapwr"] = True
         # Include all required ua pins
         for i in range(6):
             valid_yaml_data["pinout"][f"ua[{i}]"] = f"analog_{i}" if i < 2 else ""
@@ -383,13 +383,24 @@ class TestProjectInfoValidCombinations:
         project_info = ProjectInfo(valid_yaml_data, tile_sizes)
         assert project_info.analog_pins == 2
         assert project_info.is_analog is True
-        assert project_info.uses_3v3 is True
+        assert project_info.uses_vapwr is True
+
+    def test_uses_vapwr_legacy_uses_3v3_alias(self, valid_yaml_data, tile_sizes):
+        # The legacy "uses_3v3" key is still accepted as an alias for uses_vapwr.
+        valid_yaml_data["project"]["analog_pins"] = 2
+        del valid_yaml_data["project"]["uses_vapwr"]
+        valid_yaml_data["project"]["uses_3v3"] = True
+        for i in range(6):
+            valid_yaml_data["pinout"][f"ua[{i}]"] = f"analog_{i}" if i < 2 else ""
+
+        project_info = ProjectInfo(valid_yaml_data, tile_sizes)
+        assert project_info.uses_vapwr is True
 
     def test_valid_digital_project(self, valid_yaml_data, tile_sizes):
         project_info = ProjectInfo(valid_yaml_data, tile_sizes)
         assert project_info.analog_pins == 0
         assert project_info.is_analog is False
-        assert project_info.uses_3v3 is False
+        assert project_info.uses_vapwr is False
 
     def test_optional_fields(self, valid_yaml_data, tile_sizes):
         # Test that optional fields work
@@ -406,11 +417,11 @@ class TestProjectInfoValidCombinations:
         project_info = ProjectInfo(valid_yaml_data, tile_sizes)
         assert project_info.analog_pins == 0
 
-    def test_default_uses_3v3(self, valid_yaml_data, tile_sizes):
-        # Test that uses_3v3 defaults to False when not specified
-        del valid_yaml_data["project"]["uses_3v3"]
+    def test_default_uses_vapwr(self, valid_yaml_data, tile_sizes):
+        # Test that uses_vapwr defaults to False when not specified
+        del valid_yaml_data["project"]["uses_vapwr"]
         project_info = ProjectInfo(valid_yaml_data, tile_sizes)
-        assert project_info.uses_3v3 is False
+        assert project_info.uses_vapwr is False
 
     def test_all_tile_sizes(self, valid_yaml_data, tile_sizes):
         # Test all valid tile sizes

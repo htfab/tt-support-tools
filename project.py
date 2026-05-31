@@ -203,7 +203,7 @@ class Project:
                 [("input", "inout"), "VGND", 1],
                 [("input", "inout"), "VDPWR", 1],
             ]
-            if self.info.uses_3v3:
+            if self.info.uses_vapwr:
                 required_ports += [
                     [("input", "inout"), "VAPWR", 1],
                 ]
@@ -653,7 +653,7 @@ class Project:
                     for i, desc in enumerate(self.info.pinout.ua)
                 ],
                 "is_analog": self.info.is_analog,
-                "uses_3v3": self.info.uses_3v3,
+                "uses_vapwr": self.info.uses_vapwr,
             }
         )
 

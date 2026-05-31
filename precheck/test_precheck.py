@@ -697,13 +697,13 @@ def test_shapes_outside_area(gds_shapes_outside_area: str):
 def test_wrong_power_pins_1(verilog_lef_wrong_power_pins: tuple[str, str]):
     verilog_file, lef_file = verilog_lef_wrong_power_pins
     with pytest.raises(precheck.PrecheckFailure, match="Verilog contains VAPWR"):
-        precheck.power_pin_check(verilog_file, lef_file, uses_3v3=False)
+        precheck.power_pin_check(verilog_file, lef_file, uses_vapwr=False)
 
 
 def test_wrong_power_pins_2(verilog_lef_wrong_power_pins: tuple[str, str]):
     verilog_file, lef_file = verilog_lef_wrong_power_pins
     with pytest.raises(precheck.PrecheckFailure, match="LEF doesn't contain VAPWR"):
-        precheck.power_pin_check(verilog_file, lef_file, uses_3v3=True)
+        precheck.power_pin_check(verilog_file, lef_file, uses_vapwr=True)
 
 
 def test_missing_use_power(verilog_lef_missing_use_power: tuple[str, str]):
@@ -712,7 +712,7 @@ def test_missing_use_power(verilog_lef_missing_use_power: tuple[str, str]):
         precheck.PrecheckFailure,
         match="VDPWR does not have a corresponding 'USE POWER ;'",
     ):
-        precheck.power_pin_check(verilog_file, lef_file, uses_3v3=False)
+        precheck.power_pin_check(verilog_file, lef_file, uses_vapwr=False)
 
 
 def test_missing_use_ground(verilog_lef_missing_use_ground: tuple[str, str]):
@@ -721,7 +721,7 @@ def test_missing_use_ground(verilog_lef_missing_use_ground: tuple[str, str]):
         precheck.PrecheckFailure,
         match="VGND does not have a corresponding 'USE GROUND ;'",
     ):
-        precheck.power_pin_check(verilog_file, lef_file, uses_3v3=False)
+        precheck.power_pin_check(verilog_file, lef_file, uses_vapwr=False)
 
 
 def test_invalid_layer(gds_invalid_layer: str):
