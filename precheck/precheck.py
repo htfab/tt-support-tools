@@ -399,10 +399,15 @@ def main():
         raise PrecheckFailure("Projects with 3v3 power need at least one analog pin")
     def_root = f"../tech/{tech}/def"
     if is_analog:
+        analog_def = f"{def_root}/analog/tt_analog_{tiles}"
         if uses_3v3:
-            template_def = f"{def_root}/analog/tt_analog_{tiles}_3v3.def"
+            # gf180's second supply rail is "pgvaa" (its core is already 3v3, so
+            # "_3v3" is a misnomer); fall back to "_3v3" for techs that use it.
+            template_def = f"{analog_def}_pgvaa.def"
+            if not os.path.exists(template_def):
+                template_def = f"{analog_def}_3v3.def"
         else:
-            template_def = f"{def_root}/analog/tt_analog_{tiles}.def"
+            template_def = f"{analog_def}.def"
     elif tech == "ihp-sg13g2" or tech == "gf180mcuD":
         template_def = f"{def_root}/tt_block_{tiles}_pgvdd.def"
     else:
@@ -486,7 +491,7 @@ def main():
             "check": lambda: analog_pin_check(
                 gds_file, tech, is_analog, uses_3v3, analog_pins, pinout
             ),
-            "techs": ["sky130A", "ihp-sg13g2"],
+            "techs": ["sky130A", "ihp-sg13g2", "gf180mcuD"],
         },
         {
             "name": "Verilog syntax check",
