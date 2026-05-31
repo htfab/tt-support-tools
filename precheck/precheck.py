@@ -181,9 +181,9 @@ def boundary_check(gds: str, tech: str):
         raise PrecheckFailure("Shapes outside project area")
 
 
-def power_pin_check(verilog: str, lef: str, uses_3v3: bool):
+def power_pin_check(verilog: str, lef: str, uses_vapwr: bool):
     """Ensure that VPWR / VGND are present and have USE definitions,
-    and that VAPWR is present if and only if 'uses_3v3' is set."""
+    and that VAPWR is present if and only if 'uses_vapwr' is set."""
     verilog_s = open(verilog).read().replace("VPWR", "VDPWR")
     lef_s = open(lef).read().replace("VPWR", "VDPWR")
 
@@ -198,7 +198,7 @@ def power_pin_check(verilog: str, lef: str, uses_3v3: bool):
     )
 
     for ft, s in (("Verilog", verilog_s), ("LEF", lef_s)):
-        for pwr, ex in (("VGND", True), ("VDPWR", True), ("VAPWR", uses_3v3)):
+        for pwr, ex in (("VGND", True), ("VDPWR", True), ("VAPWR", uses_vapwr)):
             if (pwr in s) and not ex:
                 raise PrecheckFailure(f"{ft} contains {pwr}")
             if not (pwr in s) and ex:
@@ -269,7 +269,12 @@ def urpm_nwell_check(gds: str, top_module: str):
 
 
 def analog_pin_check(
-    gds: str, tech: str, is_analog: bool, uses_3v3: bool, analog_pins: int, pinout: dict
+    gds: str,
+    tech: str,
+    is_analog: bool,
+    uses_vapwr: bool,
+    analog_pins: int,
+    pinout: dict,
 ):
     """Check that every analog pin connects to a piece of metal
     if and only if the pin is used according to info.yaml."""
@@ -279,7 +284,7 @@ def analog_pin_check(
         filtered = {}
 
         for pin, (rect, pin_layer, via_layers) in enumerate(
-            analog_pin_rects(tech, uses_3v3)
+            analog_pin_rects(tech, uses_vapwr)
         ):
             for layer in [pin_layer] + via_layers:
                 if layer not in filtered:
@@ -390,19 +395,26 @@ def main():
     top_module = yaml_data["project"].get("top_module", f"tt_um_wokwi_{wokwi_id}")
     assert top_module == os.path.basename(gds_stem)
 
-    tiles = yaml_data.get("project", {}).get("tiles", "1x1")
-    analog_pins = yaml_data.get("project", {}).get("analog_pins", 0)
+    project_cfg = yaml_data.get("project", {})
+    tiles = project_cfg.get("tiles", "1x1")
+    analog_pins = project_cfg.get("analog_pins", 0)
     is_analog = analog_pins > 0
-    uses_3v3 = bool(yaml_data.get("project", {}).get("uses_3v3", False))
+    # "uses_3v3" is the legacy name for "uses_vapwr"; still accepted for compat.
+    uses_vapwr = bool(project_cfg.get("uses_vapwr", project_cfg.get("uses_3v3", False)))
     pinout = yaml_data.get("pinout", {})
-    if uses_3v3 and not is_analog:
-        raise PrecheckFailure("Projects with 3v3 power need at least one analog pin")
+    if uses_vapwr and not is_analog:
+        raise PrecheckFailure("Projects with VAPWR power need at least one analog pin")
     def_root = f"../tech/{tech}/def"
     if is_analog:
-        if uses_3v3:
-            template_def = f"{def_root}/analog/tt_analog_{tiles}_3v3.def"
+        analog_def = f"{def_root}/analog/tt_analog_{tiles}"
+        if uses_vapwr:
+            # gf180's second supply rail is "pgvaa" (its core is already 3v3, so
+            # "_3v3" is a misnomer); fall back to "_3v3" for techs that use it.
+            template_def = f"{analog_def}_pgvaa.def"
+            if not os.path.exists(template_def):
+                template_def = f"{analog_def}_3v3.def"
         else:
-            template_def = f"{def_root}/analog/tt_analog_{tiles}.def"
+            template_def = f"{analog_def}.def"
     elif tech == "ihp-sg13g2" or tech == "gf180mcuD":
         template_def = f"{def_root}/tt_block_{tiles}_pgvdd.def"
     else:
@@ -460,13 +472,13 @@ def main():
         {
             "name": "Pin check",
             "check": lambda: pin_check(
-                gds_file, lef_file, template_def, top_module, uses_3v3, tech
+                gds_file, lef_file, template_def, top_module, uses_vapwr, tech
             ),
         },
         {"name": "Boundary check", "check": lambda: boundary_check(gds_file, tech)},
         {
             "name": "Power pin check",
-            "check": lambda: power_pin_check(verilog_file, lef_file, uses_3v3),
+            "check": lambda: power_pin_check(verilog_file, lef_file, uses_vapwr),
             "techs": ["sky130A", "gf180mcuD"],
         },
         {"name": "Layer check", "check": lambda: layer_check(gds_file, tech)},
@@ -484,9 +496,9 @@ def main():
         {
             "name": "Analog pin check",
             "check": lambda: analog_pin_check(
-                gds_file, tech, is_analog, uses_3v3, analog_pins, pinout
+                gds_file, tech, is_analog, uses_vapwr, analog_pins, pinout
             ),
-            "techs": ["sky130A", "ihp-sg13g2"],
+            "techs": ["sky130A", "ihp-sg13g2", "gf180mcuD"],
         },
         {
             "name": "Verilog syntax check",

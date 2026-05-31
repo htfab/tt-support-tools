@@ -96,12 +96,12 @@ valid_layers_gf180mcuD = [
 # fmt: on
 
 
-def analog_pin_rects(tech: str, uses_3v3: bool):
+def analog_pin_rects(tech: str, uses_vapwr: bool):
     if tech == "sky130A":
         pin_layer = (71, 20)  # met4
         via_layers = [(70, 44)]  # via3
         for pin_number in range(8):
-            if uses_3v3:
+            if uses_vapwr:
                 x1, y1 = 136.17 - 19.32 * pin_number, 0.0
             else:
                 x1, y1 = 151.81 - 19.32 * pin_number, 0.0
@@ -112,11 +112,22 @@ def analog_pin_rects(tech: str, uses_3v3: bool):
         pin_layer = (126, 0)  # TopMetal1
         via_layers = [(125, 0)]  # TopVia1
         for pin_number in range(8):
-            if uses_3v3:
+            if uses_vapwr:
                 raise NotImplementedError
             else:
                 x1, y1 = 190.165 - 24.48 * pin_number, 0.0
             x2, y2 = x1 + 1.75, y1 + 2.0
+            rect = ((x1, y1), (x2, y2))
+            yield (rect, pin_layer, via_layers)
+    elif tech == "gf180mcuD":
+        pin_layer = (46, 0)  # Metal4
+        via_layers = [(40, 0)]  # Via3
+        for pin_number in range(8):
+            if uses_vapwr:
+                x1, y1 = 307.90 - 43.68 * pin_number, 0.0
+            else:
+                x1, y1 = 325.82 - 43.68 * pin_number, 0.0
+            x2, y2 = x1 + 3.0, y1 + 1.0
             rect = ((x1, y1), (x2, y2))
             yield (rect, pin_layer, via_layers)
     elif tech in tech_names:

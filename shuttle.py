@@ -101,7 +101,7 @@ class ShuttleConfig:
                         "width": width,
                         "height": height,
                         "analog": {i: None for i in range(project.info.analog_pins)},
-                        "pg_vaa": project.info.uses_3v3,
+                        "pg_vaa": project.info.uses_vapwr,
                     }
                     module_config["modules"].append(module_entry)
             if self.config.get("no_power_gating", False):
