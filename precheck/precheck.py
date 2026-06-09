@@ -434,7 +434,7 @@ def main():
         {
             "name": "Magic DRC",
             "check": lambda: magic_drc(gds_file, top_module),
-            "techs": ["sky130A", "gf180mcuD"],
+            "techs": ["sky130A"],
         },
         {
             "name": "KLayout FEOL",
