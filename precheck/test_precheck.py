@@ -609,6 +609,35 @@ def gds_antenna_fail(tmp_path_factory: pytest.TempPathFactory):
     return str(gds_file)
 
 
+@pytest.fixture(scope="session")
+def gds_gf180_drc_pass(tmp_path_factory: pytest.TempPathFactory):
+    """Creates a GDS without DRC violations (density rules are not run)."""
+    gds_file = tmp_path_factory.mktemp("gds") / "TEST_gf180_drc_pass.gds"
+    layout = pya.Layout()
+    metal1_info = gds_layers["Metal1"]
+    metal1 = layout.layer(metal1_info.layer, metal1_info.data_type)
+    top_cell = layout.create_cell("TEST_gf180_drc_pass")
+    # A single wide Metal1 shape: satisfies min width, area and spacing.
+    top_cell.shapes(metal1).insert(pya.DBox(0, 0, 1, 1))
+    layout.write(str(gds_file))
+    return str(gds_file)
+
+
+@pytest.fixture(scope="session")
+def gds_gf180_drc_fail(tmp_path_factory: pytest.TempPathFactory):
+    """Creates a GDS with a Metal1 spacing violation (rule M1.2a)."""
+    gds_file = tmp_path_factory.mktemp("gds") / "TEST_gf180_drc_fail.gds"
+    layout = pya.Layout()
+    metal1_info = gds_layers["Metal1"]
+    metal1 = layout.layer(metal1_info.layer, metal1_info.data_type)
+    top_cell = layout.create_cell("TEST_gf180_drc_fail")
+    # Two wide Metal1 shapes spaced 0.1um apart, below the min spacing rule.
+    top_cell.shapes(metal1).insert(pya.DBox(0, 0, 1, 1))
+    top_cell.shapes(metal1).insert(pya.DBox(1.1, 0, 2.1, 1))
+    layout.write(str(gds_file))
+    return str(gds_file)
+
+
 # TESTS
 
 
@@ -935,6 +964,20 @@ def test_verilog_syntax_error(verilog_syntax_error: str):
         match="Verilog syntax check failed",
     ):
         precheck.verilog_syntax_check(verilog_syntax_error)
+
+
+@gf180mcuD_only
+def test_gf180mcuD_drc_pass(gds_gf180_drc_pass: str):
+    precheck.klayout_gf180mcuD_drc(gds_gf180_drc_pass, "TEST_gf180_drc_pass")
+
+
+@gf180mcuD_only
+def test_gf180mcuD_drc_fail(gds_gf180_drc_fail: str):
+    with pytest.raises(
+        precheck.PrecheckFailure,
+        match="Klayout gf180mcuD DRC failed with 1 DRC violations",
+    ):
+        precheck.klayout_gf180mcuD_drc(gds_gf180_drc_fail, "TEST_gf180_drc_fail")
 
 
 @gf180mcuD_only

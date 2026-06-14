@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import time
 import traceback
@@ -73,6 +74,15 @@ def magic_drc(gds: str, toplevel: str):
         raise PrecheckFailure("Magic DRC failed")
 
 
+def check_drc_report(check: str, report_file: str):
+    report = rdb.ReportDatabase("DRC")
+    report.load(report_file)
+    if report.num_items() > 0:
+        raise PrecheckFailure(
+            f"Klayout {check} failed with {report.num_items()} DRC violations"
+        )
+
+
 def klayout_custom_drc(
     check: str, script_path: str, script_vars: dict[str, str], report_vars: list[str]
 ):
@@ -86,13 +96,7 @@ def klayout_custom_drc(
     if klayout.returncode != 0:
         raise PrecheckFailure(f"Klayout {check} failed")
 
-    report = rdb.ReportDatabase("DRC")
-    report.load(report_file)
-
-    if report.num_items() > 0:
-        raise PrecheckFailure(
-            f"Klayout {check} failed with {report.num_items()} DRC violations"
-        )
+    check_drc_report(check, report_file)
 
 
 def klayout_drc(
@@ -133,6 +137,36 @@ def klayout_gf180mcuD_antenna(gds: str):
         "antenna.drc",
         script_dir=f"{PDK_ROOT}/{PDK_NAME}/libs.tech/klayout/tech/drc/rule_decks",
     )
+
+
+def klayout_gf180mcuD_drc(gds: str, top_module: str):
+    logging.info(f"Running klayout gf180mcuD DRC on {gds}")
+    run_dir = f"{REPORTS_PATH}/gf180mcuD_drc"
+    os.makedirs(run_dir, exist_ok=True)
+    report_file = f"{run_dir}/{os.path.splitext(os.path.basename(gds))[0]}_main.lyrdb"
+    if os.path.exists(report_file):
+        os.remove(report_file)
+
+    run_drc = f"{PDK_ROOT}/{PDK_NAME}/libs.tech/klayout/tech/drc/run_drc.py"
+    subprocess.run(
+        [
+            sys.executable,
+            run_drc,
+            f"--path={gds}",
+            f"--topcell={top_module}",
+            "--variant=D",  # gf180mcuD: metal_top=11K, mim_option=B, metal_level=5LM
+            "--run_mode=deep",
+            "--thr=1",  # single-threaded to work around a klayout deadlock bug
+            f"--run_dir={run_dir}",
+        ],
+    )
+
+    # run_drc.py exits non-zero on violations, so we judge the result from the
+    # report database it produces (matching the other klayout checks).
+    if not os.path.exists(report_file):
+        raise PrecheckFailure("Klayout gf180mcuD DRC did not produce a report")
+
+    check_drc_report("gf180mcuD DRC", report_file)
 
 
 def klayout_checks(gds: str, expected_name: str, tech: str):
@@ -487,6 +521,11 @@ def main():
             "name": "urpm/nwell check",
             "check": lambda: urpm_nwell_check(gds_file, top_module),
             "techs": ["sky130A"],
+        },
+        {
+            "name": "KLayout GF180MCU DRC",
+            "check": lambda: klayout_gf180mcuD_drc(gds_file, top_module),
+            "techs": ["gf180mcuD"],
         },
         {
             "name": "Antenna check",

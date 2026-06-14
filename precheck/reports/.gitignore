@@ -5,6 +5,8 @@ drc_pin_label_purposes_overlapping_drawing.xml
 drc_zero_area.xml
 drc_nwell_urpm.xml
 drc_sg13g2.xml
+drc_antenna.xml
+gf180mcuD_drc/
 magic_drc.mag
 magic_drc.txt
 results.md
