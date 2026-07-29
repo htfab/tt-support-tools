@@ -410,41 +410,44 @@ def pin_check(
 
     gds_errors = 0
 
-    if tech != "gf180mcuD":
-        gds_layers = valid_lef_port_layers[tech]
-        gds_layer_lookup = {j: i for i, j in gds_layers.items()}
-        polygon_list = {layer: [] for layer in gds_layers}
-        for poly in top.polygons:
-            poly_layer = (poly.layer, poly.datatype)
-            layer_name = gds_layer_lookup.get(poly_layer, None)
-            if layer_name is not None:
-                polygon_list[layer_name].append(poly)
-        merged_layers = {}
-        for layer in gds_layers:
-            merged_layers[layer] = gdstk.boolean(polygon_list[layer], [], "or")
+    gds_layers = valid_lef_port_layers[tech]
+    gds_layer_lookup = {j: i for i, j in gds_layers.items()}
+    polygon_list = {layer: [] for layer in gds_layers}
+    for poly in top.polygons:
+        poly_layer = (poly.layer, poly.datatype)
+        layer_name = gds_layer_lookup.get(poly_layer, None)
+        if layer_name is not None:
+            polygon_list[layer_name].append(poly)
+    merged_layers = {}
+    for layer in gds_layers:
+        merged_layers[layer] = gdstk.boolean(polygon_list[layer], [], "or")
 
-        for current_pin, lef_rects in sorted(lef_ports_orig.items()):
-            for layer, lx, by, rx, ty in lef_rects:
-                if layer + ".pin" not in gds_layers:
-                    raise PrecheckFailure(
-                        f"Unexpected port layer in LEF: {current_pin} is on layer {layer}"
-                    )
+    for current_pin, lef_rects in sorted(lef_ports_orig.items()):
+        for layer, lx, by, rx, ty in lef_rects:
+            if tech == "gf180mcuD":
+                pin_layer = f"{layer}_label"
+            else:
+                pin_layer = f"{layer}.pin"
+            if pin_layer not in gds_layers:
+                raise PrecheckFailure(
+                    f"Unexpected port layer in LEF: {current_pin} is on layer {layer}"
+                )
 
-                pin_ok = False
-                for poly in merged_layers[layer + ".pin"]:
-                    if poly.contain_all(
-                        ((lx + 1) / 1000, (by + 1) / 1000),
-                        ((rx - 1) / 1000, (by + 1) / 1000),
-                        ((lx + 1) / 1000, (ty - 1) / 1000),
-                        ((rx - 1) / 1000, (ty - 1) / 1000),
-                    ):
-                        pin_ok = True
+            pin_ok = False
+            for poly in merged_layers[pin_layer]:
+                if poly.contain_all(
+                    ((lx + 1) / 1000, (by + 1) / 1000),
+                    ((rx - 1) / 1000, (by + 1) / 1000),
+                    ((lx + 1) / 1000, (ty - 1) / 1000),
+                    ((rx - 1) / 1000, (ty - 1) / 1000),
+                ):
+                    pin_ok = True
 
-                if not pin_ok:
-                    logging.error(
-                        f"Port {current_pin} missing from layer {layer}.pin in {gds}"
-                    )
-                    gds_errors += 1
+            if not pin_ok:
+                logging.error(
+                    f"Port {current_pin} missing from layer {pin_layer} in {gds}"
+                )
+                gds_errors += 1
 
     if lef_errors > 0 or gds_errors > 0:
         err_list = []
